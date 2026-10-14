@@ -17,7 +17,10 @@
         <el-form-item label="储位" prop="binId">
           <el-select v-model="form.binId" filterable placeholder="选择储位" style="width: 100%;">
             <el-option v-for="b in binList" :key="b.id"
-              :label="`${b.code}${b.name ? ' · ' + b.name : ''}（当前 ${b.qty}）`" :value="b.id" />
+              :label="`${b.code}${b.name ? ' · ' + b.name : ''}（当前 ${b.qty}）`" :value="b.id">
+              <span>{{ b.code }}{{ b.name ? ' · ' + b.name : '' }}（当前 {{ b.qty }}）</span>
+              <span v-if="binLoc(b)" class="bin-loc">{{ binLoc(b) }}</span>
+            </el-option>
           </el-select>
           <div class="tip">仅列出该商品有库存的储位</div>
         </el-form-item>
@@ -83,6 +86,7 @@ const afterQty = computed(() => {
 })
 
 const goodsLabel = (g) => [g.barcode, g.name, g.code].filter(Boolean).join(' · ')
+const binLoc = (b) => [b.warehouseName, b.areaName, b.shelfName].filter(Boolean).join(' / ')
 
 const loadGoods = async () => {
   try {
@@ -97,7 +101,10 @@ const onGoodsChange = async () => {
   if (!form.value.goodsId) return
   try {
     const bins = await request.get('/api/inventory/bins', { params: { goodsId: form.value.goodsId } })
-    binList.value = (bins || []).map((b) => ({ id: b.binId, code: b.binCode, name: b.binName, qty: b.qty }))
+    binList.value = (bins || []).map((b) => ({
+      id: b.binId, code: b.binCode, name: b.binName, qty: b.qty,
+      warehouseName: b.warehouseName, areaName: b.areaName, shelfName: b.shelfName
+    }))
   } catch (e) { console.error('加载储位失败', e) }
 }
 
@@ -112,7 +119,7 @@ const handleSubmit = async () => {
   try {
     await ElMessageBox.confirm(
       `商品：${goods ? (goods.name || '') + (goods.barcode ? '（' + goods.barcode + '）' : '') : '-'}\n` +
-      `储位：${bin ? bin.code : '-'}\n` +
+      `储位：${bin ? bin.code + (binLoc(bin) ? '（' + binLoc(bin) + '）' : '') : '-'}\n` +
       `当前库存：${currentQty.value}\n` +
       `调整后库存：${after}\n` +
       `调整原因：${form.value.reason}\n\n` +
@@ -142,4 +149,5 @@ onMounted(loadGoods)
 <style scoped>
 .adjust-container { padding: 20px; }
 .tip { font-size: 12px; color: var(--el-text-color-secondary); line-height: 1.6; }
+.bin-loc { float: right; color: var(--el-text-color-secondary); font-size: 12px; }
 </style>

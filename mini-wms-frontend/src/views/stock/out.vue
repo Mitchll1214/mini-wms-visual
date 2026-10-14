@@ -116,7 +116,11 @@
           <template #default="scope">{{ goodsMap[scope.row.goodsId] || `#${scope.row.goodsId}` }}</template>
         </el-table-column>
         <el-table-column label="储位" width="140">
-          <template #default="scope">{{ binIdMap[scope.row.binId] || `#${scope.row.binId}` }}</template>
+          <template #default="scope">
+            <el-tooltip :content="binLocMap[scope.row.binId] || binIdMap[scope.row.binId] || `#${scope.row.binId}`" placement="top">
+              <span class="bin-cell">{{ binIdMap[scope.row.binId] || `#${scope.row.binId}` }}</span>
+            </el-tooltip>
+          </template>
         </el-table-column>
         <el-table-column prop="qty" label="数量" width="100" />
       </el-table>
@@ -144,6 +148,7 @@ const goodsList = ref([])
 const binList = ref([])          // { id, code, label, qty }
 const goodsMap = ref({})
 const binIdMap = ref({})
+const binLocMap = ref({})
 
 const loadData = async () => {
   try {
@@ -164,6 +169,8 @@ const loadOptions = async () => {
     const b = await request.get('/api/bin/tree')
     binList.value = b || []
     binIdMap.value = Object.fromEntries(binList.value.map(x => [x.id, x.code]))
+    binLocMap.value = Object.fromEntries(binList.value.map(x => [x.id,
+      [x.warehouseName, x.areaName, x.shelfName, x.code ? '储位 ' + x.code : null].filter(Boolean).join(' / ')]))
   } catch (err) { console.error('加载储位选项失败', err) }
 }
 
@@ -175,8 +182,10 @@ const onGoodsChange = async (row) => {
   // 商品变化时带出该商品有库存的储位（含库存）
   try {
     const bins = await request.get('/api/stock-out/bins', { params: { goodsId: row.goodsId } })
-    binList.value = (bins || []).map(b => ({ id: b.binId, code: b.binCode, name: `库存 ${b.qty}`, qty: b.qty }))
+    binList.value = (bins || []).map(b => ({ id: b.binId, code: b.binCode, name: `库存 ${b.qty}`, qty: b.qty, warehouseName: b.warehouseName, areaName: b.areaName, shelfName: b.shelfName }))
     binIdMap.value = Object.fromEntries(binList.value.map(x => [x.id, x.code]))
+    binLocMap.value = Object.fromEntries(binList.value.map(x => [x.id,
+      [x.warehouseName, x.areaName, x.shelfName, x.code ? '储位 ' + x.code : null].filter(Boolean).join(' / ')]))
   } catch (e) { console.error(e) }
 }
 
@@ -243,4 +252,5 @@ onMounted(() => { loadData(); loadOptions() })
 .card-header { display: flex; justify-content: space-between; align-items: center; }
 .pagination-wrapper { margin-top: 15px; display: flex; justify-content: flex-end; }
 .bin-loc { float: right; color: #909399; font-size: 12px; }
+.bin-cell { border-bottom: 1px dashed var(--color-border-strong); cursor: help; }
 </style>

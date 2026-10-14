@@ -72,8 +72,14 @@ public class InventoryService {
         for (Map<String, Object> r : records) {
             Integer gid = ((Number) r.get("goodsId")).intValue();
             List<Map<String, Object>> bins = jdbcTemplate.queryForList(
-                    "SELECT i.id AS id, i.bin_id AS binId, b.code AS binCode, b.name AS binName, i.qty AS qty "
-                            + "FROM inventory i LEFT JOIN bin b ON b.id = i.bin_id "
+                    "SELECT i.id AS id, i.bin_id AS binId, i.qty AS qty, "
+                            + "b.code AS binCode, b.name AS binName, "
+                            + "s.name AS shelfName, a.name AS areaName, w.name AS warehouseName "
+                            + "FROM inventory i "
+                            + "LEFT JOIN bin b ON b.id = i.bin_id "
+                            + "LEFT JOIN shelf s ON s.id = b.shelf_id "
+                            + "LEFT JOIN warehouse_area a ON a.id = s.area_id "
+                            + "LEFT JOIN warehouse w ON w.id = a.warehouse_id "
                             + "WHERE i.goods_id = ? AND i.deleted_at IS NULL ORDER BY i.qty DESC",
                     gid);
             r.put("binList", bins);
@@ -93,10 +99,22 @@ public class InventoryService {
     }
 
     /**
-     * 商品分储位明细
+     * 商品分储位明细（含仓库 / 库区 / 货架 / 储位的完整位置层级）
      */
     public Result<?> goodsDetail(Integer goodsId) {
-        return Result.success(inventoryMapper.selectByGoodsId(goodsId));
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                "SELECT i.id AS id, i.bin_id AS binId, i.qty AS qty, "
+                        + "b.code AS binCode, b.name AS binName, "
+                        + "s.name AS shelfName, a.name AS areaName, w.name AS warehouseName "
+                        + "FROM inventory i "
+                        + "LEFT JOIN bin b ON b.id = i.bin_id "
+                        + "LEFT JOIN shelf s ON s.id = b.shelf_id "
+                        + "LEFT JOIN warehouse_area a ON a.id = s.area_id "
+                        + "LEFT JOIN warehouse w ON w.id = a.warehouse_id "
+                        + "WHERE i.goods_id = ? AND i.deleted_at IS NULL "
+                        + "ORDER BY w.name, a.name, s.name, b.code",
+                goodsId);
+        return Result.success(rows);
     }
 
     /**

@@ -23,8 +23,19 @@
       <el-col :span="12">
         <el-card header="储位分布与库存">
           <el-table :data="inventoryList" border style="width: 100%" empty-text="暂无储位库存">
-            <el-table-column prop="binCode" label="储位编码" width="130" />
-            <el-table-column prop="binName" label="储位名称" />
+            <el-table-column label="存放位置" min-width="220">
+              <template #default="{ row }">
+                <span class="loc-text">{{ locationText(row) }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="储位编码" width="140">
+              <template #default="{ row }">
+                <el-tooltip :content="fullLocation(row)" placement="top">
+                  <span class="bin-code">{{ row.binCode || '-' }}</span>
+                </el-tooltip>
+              </template>
+            </el-table-column>
+            <el-table-column prop="binName" label="储位名称" width="120" />
             <el-table-column prop="qty" label="库存数量" width="100">
               <template #default="{ row }">
                 <el-tag type="info">{{ row.qty }}</el-tag>
@@ -86,6 +97,14 @@ const goods = ref({})
 const inventoryList = ref([])
 const images = ref([])
 const uploadImageType = ref('goods')
+
+// 仓库 / 库区 / 货架 位置文本
+const locationText = (row) =>
+  [row.warehouseName, row.areaName, row.shelfName].filter(Boolean).join(' / ') || '—'
+// 悬浮完整位置：仓库 / 库区 / 货架 / 储位
+const fullLocation = (row) =>
+  [row.warehouseName, row.areaName, row.shelfName, row.binCode ? '储位 ' + row.binCode : null]
+    .filter(Boolean).join(' / ') || '—'
 
 const loadDetail = async () => {
   if (!goodsId) return
@@ -160,4 +179,6 @@ onMounted(() => {
 <style scoped>
 .goods-detail-container { padding: 20px; }
 .upload-bar { display: flex; align-items: center; margin-bottom: 15px; }
+.loc-text { color: var(--color-ink-soft); font-size: 13px; }
+.bin-code { border-bottom: 1px dashed var(--color-border-strong); cursor: help; }
 </style>

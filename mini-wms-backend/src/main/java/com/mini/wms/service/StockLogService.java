@@ -69,14 +69,19 @@ public class StockLogService {
         pageArgs.add(offset);
         List<Map<String, Object>> records = jdbcTemplate.queryForList(
                 "SELECT s.id AS id, s.created_at AS createdAt, "
-                        + "g.name AS goodsName, g.barcode AS barcode, b.code AS binCode, "
+                        + "g.name AS goodsName, g.barcode AS barcode, "
+                        + "b.code AS binCode, b.name AS binName, "
+                        + "sh.name AS shelfName, ar.name AS areaName, wh.name AS warehouseName, "
                         + "s.change_type AS changeType, s.change_qty AS changeQty, "
                         + "s.before_qty AS beforeQty, s.after_qty AS afterQty, "
                         + "s.operator AS operator, s.device_info AS deviceIp, "
                         + "s.adjust_reason AS adjustReason, s.remark AS remark "
                         + "FROM stock_log s "
                         + "LEFT JOIN goods g ON g.id = s.goods_id "
-                        + "LEFT JOIN bin b ON b.id = s.bin_id"
+                        + "LEFT JOIN bin b ON b.id = s.bin_id "
+                        + "LEFT JOIN shelf sh ON sh.id = b.shelf_id "
+                        + "LEFT JOIN warehouse_area ar ON ar.id = sh.area_id "
+                        + "LEFT JOIN warehouse wh ON wh.id = ar.warehouse_id"
                         + where
                         + " ORDER BY s.created_at DESC, s.id DESC LIMIT ? OFFSET ?",
                 pageArgs.toArray());

@@ -80,12 +80,14 @@
           <div class="bin-list">
             <div v-if="(binsByShelf[shelf.id] || []).length === 0" class="bin-empty">暂无储位</div>
             <div v-for="bin in binsByShelf[shelf.id] || []" :key="bin.id" class="bin-item">
-              <el-tag
-                size="small"
-                :type="bin.status === 'DISABLED' ? 'info' : bin.status === 'OCCUPIED' ? 'warning' : 'success'"
-              >
-                {{ bin.code }}{{ bin.name ? ' · ' + bin.name : '' }}
-              </el-tag>
+              <el-tooltip :content="binLocationText(area, shelf, bin)" placement="top">
+                <el-tag
+                  size="small"
+                  :type="bin.status === 'DISABLED' ? 'info' : bin.status === 'OCCUPIED' ? 'warning' : 'success'"
+                >
+                  {{ bin.code }}{{ bin.name ? ' · ' + bin.name : '' }}
+                </el-tag>
+              </el-tooltip>
               <el-popconfirm title="确定删除该储位？" @confirm="deleteBin(shelf.id, bin.id)">
                 <template #reference>
                   <el-button link type="danger" size="small" :icon="Delete" />
@@ -239,6 +241,11 @@ const loadBins = async (shelf) => {
     console.error(err)
   }
 }
+
+// 悬浮展示储位完整位置：仓库 / 库区 / 货架 / 储位
+const binLocationText = (area, shelf, bin) =>
+  [currentWarehouse.value?.name, area.name, shelf.name, bin.code ? '储位 ' + bin.code : null]
+    .filter(Boolean).join(' / ')
 
 // ---------- 仓库表单 ----------
 const warehouseDialogVisible = ref(false)

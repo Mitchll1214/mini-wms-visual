@@ -25,8 +25,14 @@
             <div style="padding: 10px 20px;">
               <h4>储位库存明细</h4>
               <el-table :data="row.binList || []" size="small" border>
-                <el-table-column prop="binCode" label="储位编码" width="160" />
-                <el-table-column prop="binName" label="储位名称" width="160" />
+                <el-table-column label="储位编码" width="150">
+                  <template #default="scope">
+                    <el-tooltip :content="fullLocation(scope.row)" placement="top">
+                      <span class="bin-cell">{{ scope.row.binCode || '-' }}</span>
+                    </el-tooltip>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="binName" label="储位名称" width="140" />
                 <el-table-column prop="qty" label="当前库存" width="120">
                   <template #default="scope">
                     <span :style="{ color: scope.row.qty === 0 ? '#F56C6C' : '#303133', fontWeight: 'bold' }">
@@ -86,6 +92,11 @@ const query = ref({ page: 1, size: 10, keyword: '' })
 const tableData = ref([])
 const total = ref(0)
 
+// 悬浮展示储位的完整位置：仓库 / 库区 / 货架 / 储位
+const fullLocation = (row) =>
+  [row.warehouseName, row.areaName, row.shelfName, row.binCode ? '储位 ' + row.binCode : null]
+    .filter(Boolean).join(' / ') || '—'
+
 const loadData = async () => {
   try {
     const res = await request.get('/api/inventory/page', { params: query.value })
@@ -122,4 +133,5 @@ onMounted(loadData)
 .card-header { display: flex; justify-content: space-between; align-items: center; }
 .search-form { margin-bottom: 10px; }
 .pagination-wrapper { margin-top: 15px; display: flex; justify-content: flex-end; }
+.bin-cell { border-bottom: 1px dashed var(--color-border-strong); cursor: help; }
 </style>

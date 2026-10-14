@@ -30,8 +30,12 @@ public interface InventoryMapper extends BaseMapper<Inventory> {
     /**
      * 根据商品 ID 查询有库存的储位列表（含储位编码，出库下拉用）
      */
-    @Select("SELECT i.bin_id AS binId, i.qty, b.code AS binCode, b.name AS binName " +
+    @Select("SELECT i.bin_id AS binId, i.qty, b.code AS binCode, b.name AS binName, " +
+            "sh.name AS shelfName, ar.name AS areaName, wh.name AS warehouseName " +
             "FROM inventory i LEFT JOIN bin b ON i.bin_id = b.id " +
+            "LEFT JOIN shelf sh ON sh.id = b.shelf_id " +
+            "LEFT JOIN warehouse_area ar ON ar.id = sh.area_id " +
+            "LEFT JOIN warehouse wh ON wh.id = ar.warehouse_id " +
             "WHERE i.goods_id = #{goodsId} AND i.deleted_at IS NULL AND i.qty > 0 " +
             "ORDER BY i.qty DESC")
     List<Map<String, Object>> selectBinsByGoodsId(@Param("goodsId") Integer goodsId);

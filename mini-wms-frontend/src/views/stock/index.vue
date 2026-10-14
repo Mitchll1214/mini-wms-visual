@@ -118,7 +118,11 @@
           <template #default="scope">{{ goodsMap[scope.row.goodsId] || `#${scope.row.goodsId}` }}</template>
         </el-table-column>
         <el-table-column label="储位" width="140">
-          <template #default="scope">{{ binMap[scope.row.binId] || `#${scope.row.binId}` }}</template>
+          <template #default="scope">
+            <el-tooltip :content="binLocMap[scope.row.binId] || binMap[scope.row.binId] || `#${scope.row.binId}`" placement="top">
+              <span class="bin-cell">{{ binMap[scope.row.binId] || `#${scope.row.binId}` }}</span>
+            </el-tooltip>
+          </template>
         </el-table-column>
         <el-table-column prop="qty" label="数量" width="100" />
       </el-table>
@@ -147,6 +151,7 @@ const binList = ref([])
 const suppliers = ref([])
 const goodsMap = ref({})
 const binMap = ref({})
+const binLocMap = ref({})
 
 const loadData = async () => {
   try {
@@ -167,6 +172,8 @@ const loadOptions = async () => {
     const b = await request.get('/api/bin/tree')
     binList.value = b || []
     binMap.value = Object.fromEntries(binList.value.map(x => [x.id, x.code]))
+    binLocMap.value = Object.fromEntries(binList.value.map(x => [x.id,
+      [x.warehouseName, x.areaName, x.shelfName, x.code ? '储位 ' + x.code : null].filter(Boolean).join(' / ')]))
   } catch (err) { console.error('加载储位选项失败', err) }
   try {
     const s = await request.get('/api/supplier/list')
@@ -228,4 +235,5 @@ onMounted(() => { loadData(); loadOptions() })
 .card-header { display: flex; justify-content: space-between; align-items: center; }
 .pagination-wrapper { margin-top: 15px; display: flex; justify-content: flex-end; }
 .bin-loc { float: right; color: #909399; font-size: 12px; }
+.bin-cell { border-bottom: 1px dashed var(--color-border-strong); cursor: help; }
 </style>

@@ -24,7 +24,13 @@
         <el-table-column prop="createdAt" label="变动时间" width="170" />
         <el-table-column prop="goodsName" label="商品名称" min-width="160" />
         <el-table-column prop="barcode" label="条码" width="150" />
-        <el-table-column prop="binCode" label="储位编码" width="120" />
+        <el-table-column label="储位编码" width="130">
+          <template #default="{ row }">
+            <el-tooltip :content="binLocation(row)" placement="top">
+              <span class="bin-cell">{{ row.binCode || '-' }}</span>
+            </el-tooltip>
+          </template>
+        </el-table-column>
         <el-table-column prop="changeType" label="类型" width="100">
           <template #default="{ row }">
             <el-tag :type="row.changeType === 'in' ? 'success' : row.changeType === 'out' ? 'danger' : 'warning'">
@@ -68,6 +74,11 @@ const query = ref({ page: 1, size: 10, changeType: '' })
 const tableData = ref([])
 const total = ref(0)
 
+// 悬浮展示储位的完整位置：仓库 / 库区 / 货架 / 储位
+const binLocation = (row) =>
+  [row.warehouseName, row.areaName, row.shelfName, row.binCode ? '储位 ' + row.binCode : null]
+    .filter(Boolean).join(' / ') || '—'
+
 const loadData = async () => {
   try {
     const res = await request.get('/api/inventory/logs', { params: query.value })
@@ -91,4 +102,5 @@ onMounted(loadData)
 .card-header { display: flex; justify-content: space-between; align-items: center; }
 .search-form { margin-bottom: 10px; }
 .pagination-wrapper { margin-top: 15px; display: flex; justify-content: flex-end; }
+.bin-cell { border-bottom: 1px dashed var(--color-border-strong); cursor: help; }
 </style>
