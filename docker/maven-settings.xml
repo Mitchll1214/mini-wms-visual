@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MiniWMS Visual - Maven 镜像配置模板
+  Dockerfile 构建时通过 sed 将 __MAVEN_MIRROR__ 替换为实际镜像地址
+  并写入容器内 /root/.m2/settings.xml，不影响本地开发配置。
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                              https://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+  <mirrors>
+    <mirror>
+      <id>mini-wms-mirror</id>
+      <name>Mirror configured at build time</name>
+      <!-- 占位符，会在 Dockerfile 中替换为 MAVEN_MIRROR 参数 -->
+      <url>__MAVEN_MIRROR__</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+  </mirrors>
+
+</settings>

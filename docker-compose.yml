@@ -1,0 +1,21 @@
+services:
+  mini-wms:
+    build:
+      context: .
+      args:
+        # 镜像仓库前缀：默认空（Docker Hub 官方）；国内可设加速前缀
+        REGISTRY_PREFIX: ${REGISTRY_PREFIX:-}
+        # npm 依赖源：默认国内 npmmirror；国外切换官方源
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
+        # Maven 中央仓库镜像：默认阿里云；国外切换官方源
+        MAVEN_MIRROR: ${MAVEN_MIRROR:-https://maven.aliyun.com/repository/public}
+    container_name: mini-wms-visual
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3030}:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - SERVER_PORT=8080
+    volumes:
+      - ./data:/app/data  # 数据持久化目录（SQLite、图片、备份）
+      - ./logs:/app/logs  # 日志持久化

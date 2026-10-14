@@ -1,0 +1,60 @@
+server:
+  port: 8080
+  address: 0.0.0.0
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: mini-wms-visual
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 30MB
+  datasource:
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:${mini.wms.data-dir:data}/mini_wms.db
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+  mvc:
+    static-path-pattern: /**
+  web:
+    resources:
+      static-locations:
+        - classpath:/static/
+        - file:/app/public/
+        - file:./public/
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.mini.wms.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deletedAt
+      logic-delete-value: "datetime('now')"
+      logic-not-delete-value: "null"
+
+# 自定义配置
+mini:
+  wms:
+    # 数据目录（相对于程序运行目录）
+    data-dir: data
+    # 图片目录
+    image-dir: data/images
+    # 回收站目录
+    trash-dir: data/trash
+    # 备份目录
+    backup-dir: data/backup
+    # 单图最大字节数（10MB）
+    max-image-size: 10485760
+    # 回收站保留天数
+    recycle-retention-days: 30
+    # token 有效期（分钟）
+    token-ttl-minutes: 5
+    # 会话超时（分钟）
+    session-timeout-minutes: 720

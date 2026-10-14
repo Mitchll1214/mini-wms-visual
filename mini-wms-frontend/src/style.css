@@ -1,0 +1,113 @@
+/* Global base + Element Plus token mapping (Cobalt · modern-minimal) */
+@import './styles/tokens.css';
+
+/* ---- Element Plus primary token mapping ---- */
+:root {
+  --el-color-primary: var(--color-accent);
+  --el-color-primary-light-3: oklch(62% 0.14 255);
+  --el-color-primary-light-5: oklch(72% 0.10 255);
+  --el-color-primary-light-7: oklch(84% 0.06 255);
+  --el-color-primary-light-8: oklch(89% 0.04 255);
+  --el-color-primary-light-9: var(--color-accent-soft);
+  --el-color-primary-dark-2: var(--color-accent-hover);
+  --el-color-success: var(--color-success);
+  --el-color-warning: var(--color-warning);
+  --el-color-danger: var(--color-danger);
+  --el-color-info: var(--color-ink-faint);
+  --el-text-color-primary: var(--color-ink);
+  --el-text-color-regular: var(--color-ink-soft);
+  --el-text-color-secondary: var(--color-ink-faint);
+  --el-text-color-placeholder: var(--color-ink-faint);
+  --el-border-color: var(--color-border);
+  --el-border-color-light: var(--color-border);
+  --el-border-color-lighter: var(--color-border);
+  --el-border-color-extra-light: var(--color-paper-2);
+  --el-fill-color-light: var(--color-paper-2);
+  --el-fill-color-lighter: var(--color-paper-3);
+  --el-fill-color-blank: var(--color-paper);
+  --el-bg-color: var(--color-paper);
+  --el-bg-color-page: var(--color-paper);
+  --el-bg-color-overlay: var(--color-paper);
+  --el-border-radius-base: var(--radius-sm);
+  --el-border-radius-small: var(--radius-sm);
+  --el-font-family: var(--font-sans);
+  --el-font-size-base: var(--text-md);
+}
+
+/* ---- responsive + overflow guards (non-negotiable) ---- */
+html,
+body {
+  overflow-x: clip;
+  margin: 0;
+}
+
+body {
+  font: var(--text-md) / 1.55 var(--font-sans);
+  color: var(--color-ink);
+  background: var(--color-paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-style: normal;
+  color: var(--color-ink);
+  line-height: 1.18;
+}
+
+h1 { font-size: var(--text-display); letter-spacing: -0.02em; }
+h2 { font-size: var(--text-2xl); letter-spacing: -0.01em; }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+
+#app { min-height: 100svh; }
+
+a { color: var(--color-accent); text-decoration: none; }
+a:hover { color: var(--color-accent-hover); }
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Element Plus component refinement */
+.el-card {
+  --el-card-border-color: var(--color-border);
+  --el-card-border-radius: var(--radius-md);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-1);
+}
+
+.el-table {
+  --el-table-border-color: var(--color-border);
+  --el-table-header-bg-color: var(--color-paper-2);
+  --el-table-row-hover-bg-color: oklch(95% 0.008 255 / 0.5);
+  --el-table-header-text-color: var(--color-ink-soft);
+}
+
+.el-button {
+  transition: background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+.el-button:active { transform: translateY(1px); }
+
+.el-dialog {
+  --el-dialog-border-radius: var(--radius-lg);
+  border-radius: var(--radius-lg);
+}
+
+.el-tag { border-radius: var(--radius-sm); }
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
