@@ -9,10 +9,10 @@
 
       <el-form :inline="true" :model="query" class="search-form">
         <el-form-item label="变动类型">
-          <el-select v-model="query.changeType" placeholder="全部类型" clearable>
-            <el-option label="入库 (in)" value="in" />
-            <el-option label="出库 (out)" value="out" />
-            <el-option label="库存调整 (adjust)" value="adjust" />
+          <el-select v-model="query.changeType" placeholder="全部类型" clearable style="width: 160px">
+            <el-option label="入库" value="in" />
+            <el-option label="出库" value="out" />
+            <el-option label="库存调整" value="adjust" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -21,28 +21,29 @@
       </el-form>
 
       <el-table :data="tableData" border style="width: 100%">
-        <el-table-column prop="createdAt" label="变动时间" width="180" />
+        <el-table-column prop="createdAt" label="变动时间" width="170" />
         <el-table-column prop="goodsName" label="商品名称" min-width="160" />
-        <el-table-column prop="binCode" label="储位编码" width="130" />
-        <el-table-column prop="changeType" label="类型" width="110">
+        <el-table-column prop="barcode" label="条码" width="150" />
+        <el-table-column prop="binCode" label="储位编码" width="120" />
+        <el-table-column prop="changeType" label="类型" width="100">
           <template #default="{ row }">
             <el-tag :type="row.changeType === 'in' ? 'success' : row.changeType === 'out' ? 'danger' : 'warning'">
               {{ row.changeType === 'in' ? '入库' : row.changeType === 'out' ? '出库' : '调整' }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="changeQty" label="变动数量" width="110">
+        <el-table-column prop="changeQty" label="变动数量" width="100">
           <template #default="{ row }">
             <span :style="{ color: row.changeQty > 0 ? '#67C23A' : '#F56C6C', fontWeight: 'bold' }">
               {{ row.changeQty > 0 ? '+' + row.changeQty : row.changeQty }}
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="beforeQty" label="变动前" width="90" />
-        <el-table-column prop="afterQty" label="变动后" width="90" />
+        <el-table-column prop="beforeQty" label="变动前" width="80" />
+        <el-table-column prop="afterQty" label="变动后" width="80" />
         <el-table-column prop="operator" label="操作人" width="100" />
-        <el-table-column prop="deviceInfo" label="设备" width="90" />
-        <el-table-column prop="adjustReason" label="原因/备注" min-width="160" />
+        <el-table-column prop="adjustReason" label="原因/备注" min-width="150" />
+        <el-table-column prop="deviceIp" label="操作 IP" width="140" fixed="right" />
       </el-table>
 
       <div class="pagination-wrapper">

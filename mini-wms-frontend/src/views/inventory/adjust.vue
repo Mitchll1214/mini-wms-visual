@@ -82,7 +82,7 @@ const afterQty = computed(() => {
   return q
 })
 
-const goodsLabel = (g) => `${g.name || ''}${g.barcode ? '（' + g.barcode + '）' : ''}`
+const goodsLabel = (g) => [g.barcode, g.name, g.code].filter(Boolean).join(' · ')
 
 const loadGoods = async () => {
   try {

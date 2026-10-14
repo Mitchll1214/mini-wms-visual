@@ -26,6 +26,8 @@ public class MiniWmsVisualApplication extends SpringBootServletInitializer {
     private int port;
 
     public static void main(String[] args) {
+        // 统一使用上海时区：所有 LocalDateTime 记录均为北京时间
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Shanghai"));
         // 确保数据目录存在（SQLite 不会自动创建父目录，首次运行需预建，否则报 Failed to obtain JDBC Connection）
         mkdirs("data", "data/images", "data/trash", "data/backup");
         SpringApplication.run(MiniWmsVisualApplication.class, args);

@@ -72,6 +72,7 @@ COPY --from=frontend_builder /app/frontend/dist /app/public
 EXPOSE 8080
 
 ENV SPRING_PROFILES_ACTIVE=default \
-    SERVER_PORT=8080
+    SERVER_PORT=8080 \
+    TZ=Asia/Shanghai
 
 CMD ["java", "-jar", "/app/app.jar"]

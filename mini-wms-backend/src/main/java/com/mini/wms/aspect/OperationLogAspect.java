@@ -32,7 +32,7 @@ import java.util.Map;
  *   action   —— 业务动作（如 新增 / 审核 / 撤销 / 登录）；
  *   detail   —— 关键信息（登录记录来源 IP；单据记录单号；其余记录对象名称或 ID）；
  *   operator —— 操作人账号（登录等无会话接口回落到参数 username）；
- *   deviceInfo —— 客户端类型（PC / MOBILE）。
+ *   deviceInfo —— 操作者 IP（记录操作来源地址）。
  */
 @Slf4j
 @Aspect
@@ -58,7 +58,7 @@ public class OperationLogAspect {
                     resolveAction(uri, request.getMethod()),
                     resolveDetail(request, uri, joinPoint),
                     resolveOperator(request, joinPoint),
-                    resolveDevice(request, joinPoint));
+                    clientIp(request));
         } catch (Exception e) {
             // 记录日志失败绝不能影响主业务
             log.warn("记录操作日志失败: {}", e.getMessage());
@@ -131,25 +131,70 @@ public class OperationLogAspect {
     }
 
     /**
-     * 关键信息（不含接口路径与请求参数明细）：
-     *   登录 —— 记录来源 IP；
-     *   单据操作 —— 记录单号；
-     *   其余 —— 记录对象名称，缺失时回落为记录 ID。
+     * 关键信息（不含接口路径与请求参数原文）：汇总多个业务字段，比单一标识更详细。
+     *   登录 —— 来源 IP；
+     *   业务操作 —— 单号 / 名称 / 账号 / 条码 / 编码 / 规格 / 类型 / 调整方式 / 原因 / 状态 / 角色 / 明细条数；
+     *   无可用字段时回落为记录 ID。
      */
     private String resolveDetail(HttpServletRequest request, String uri, JoinPoint joinPoint) {
         if (uri.endsWith("/login")) {
-            return "登录 IP " + clientIp(request);
+            return "登录 · IP " + clientIp(request);
         }
-        String orderNo = firstGetterValue(joinPoint, "getOrderNo");
-        if (orderNo != null) {
-            return "单号 " + orderNo;
+        StringBuilder sb = new StringBuilder();
+        appendIf(sb, "单号", firstGetterValue(joinPoint, "getOrderNo"));
+        appendIf(sb, "名称", firstGetterValue(joinPoint, "getName"));
+        appendIf(sb, "账号", firstGetterValue(joinPoint, "getUsername"));
+        appendIf(sb, "条码", firstGetterValue(joinPoint, "getBarcode"));
+        appendIf(sb, "编码", firstGetterValue(joinPoint, "getCode"));
+        appendIf(sb, "规格", firstGetterValue(joinPoint, "getSpec"));
+        appendIf(sb, "单位", firstGetterValue(joinPoint, "getUnit"));
+        appendIf(sb, "类型", firstGetterValue(joinPoint, "getInType"));
+        appendIf(sb, "类型", firstGetterValue(joinPoint, "getOutType"));
+        appendIf(sb, "调整方式", firstGetterValue(joinPoint, "getAdjustType"));
+        appendIf(sb, "原因", firstGetterValue(joinPoint, "getReason"));
+        appendIf(sb, "状态", firstGetterValue(joinPoint, "getStatus"));
+        appendIf(sb, "角色", firstGetterValue(joinPoint, "getRole"));
+        appendIf(sb, "备注", firstGetterValue(joinPoint, "getRemark"));
+        Integer itemCount = collectionSize(joinPoint, "getItems");
+        if (itemCount != null && itemCount > 0) {
+            appendIf(sb, "明细", itemCount + " 项");
         }
-        String name = firstGetterValue(joinPoint, "getName");
-        if (name != null) {
-            return "对象 " + name;
+        if (sb.length() == 0) {
+            String id = lastPathNumber(uri);
+            if (id != null) {
+                sb.append("记录 ID ").append(id);
+            }
         }
-        String id = lastPathNumber(uri);
-        return id == null ? null : "记录 ID " + id;
+        return sb.length() == 0 ? null : sb.toString();
+    }
+
+    private void appendIf(StringBuilder sb, String label, String value) {
+        if (value == null || value.isBlank()) {
+            return;
+        }
+        if (sb.length() > 0) {
+            sb.append(" · ");
+        }
+        sb.append(label).append(' ').append(value);
+    }
+
+    /** 某集合型 getter（如 getItems）的元素个数，无则 null */
+    private Integer collectionSize(JoinPoint joinPoint, String getter) {
+        for (Object arg : joinPoint.getArgs()) {
+            if (!isBusinessArg(arg)) {
+                continue;
+            }
+            try {
+                Method m = arg.getClass().getMethod(getter);
+                Object v = m.invoke(arg);
+                if (v instanceof java.util.Collection<?> c) {
+                    return c.size();
+                }
+            } catch (Exception ignore) {
+                // 无该 getter
+            }
+        }
+        return null;
     }
 
     private String clientIp(HttpServletRequest request) {
@@ -222,24 +267,6 @@ public class OperationLogAspect {
             }
         }
         return "匿名";
-    }
-
-    /** 客户端类型：优先会话，其次登录参数 clientType，默认 PC */
-    private String resolveDevice(HttpServletRequest request, JoinPoint joinPoint) {
-        String sessionId = resolveSessionId(request);
-        if (sessionId != null) {
-            SysSession session = authService.getValidSession(sessionId);
-            if (session != null && session.getClientType() != null && !session.getClientType().isEmpty()) {
-                return session.getClientType();
-            }
-        }
-        for (Object arg : joinPoint.getArgs()) {
-            String clientType = invokeStringGetter(arg, "getClientType");
-            if (clientType != null) {
-                return clientType;
-            }
-        }
-        return "PC";
     }
 
     private boolean isBusinessArg(Object arg) {

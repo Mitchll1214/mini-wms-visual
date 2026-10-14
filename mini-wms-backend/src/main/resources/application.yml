@@ -21,10 +21,12 @@ spring:
     static-path-pattern: /**
   web:
     resources:
+      # 外部 public 目录（Docker 构建注入的最新前端）优先于 jar 内置 static，
+      # 否则随 jar 打包的旧前端会遮蔽外部新产物，导致前端改动部署后不生效。
       static-locations:
-        - classpath:/static/
         - file:/app/public/
         - file:./public/
+        - classpath:/static/
 
 mybatis-plus:
   mapper-locations: classpath:mapper/*.xml
@@ -36,7 +38,7 @@ mybatis-plus:
     db-config:
       id-type: auto
       logic-delete-field: deletedAt
-      logic-delete-value: "datetime('now')"
+      logic-delete-value: "datetime('now','+8 hours')"
       logic-not-delete-value: "null"
 
 # 自定义配置

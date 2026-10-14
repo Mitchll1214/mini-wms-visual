@@ -101,7 +101,7 @@ public class StockOutService {
             }
         }
         order.setStatus("AUDITED");
-        order.setAuditAt(LocalDateTime.now().toString());
+        order.setAuditAt(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
         order.setAuditBy(operator);
         stockOutOrderMapper.updateById(order);
 
@@ -110,7 +110,7 @@ public class StockOutService {
             decreaseStock(item.getGoodsId(), item.getBinId(), item.getQty());
             int after = before - item.getQty();
             stockLogService.record(item.getGoodsId(), item.getBinId(), "out", -item.getQty(),
-                    before, after, null, order.getId(), operator, "PC", order.getRemark());
+                    before, after, null, order.getId(), operator, com.mini.wms.util.RequestUtil.clientIp(), order.getRemark());
         }
         return Result.success();
     }

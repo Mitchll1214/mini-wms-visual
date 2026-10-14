@@ -89,7 +89,7 @@ public class StockAdjustService {
         log.setAfterQty(targetQty);
         log.setAdjustReason(reason);
         log.setOperator(operator);
-        log.setDeviceInfo("PC");
+        log.setDeviceInfo(com.mini.wms.util.RequestUtil.clientIp());
         log.setRemark(request.getRemark());
         log.setCreatedAt(LocalDateTime.now());
         stockLogMapper.insert(log);

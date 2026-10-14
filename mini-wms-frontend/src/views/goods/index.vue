@@ -31,6 +31,7 @@
             <el-icon v-else color="#c0c4cc" style="font-size: 28px"><Picture /></el-icon>
           </template>
         </el-table-column>
+        <el-table-column prop="code" label="商品编码" width="140" />
         <el-table-column prop="name" label="商品名称" min-width="160" />
         <el-table-column prop="spec" label="规格型号" width="130" />
         <el-table-column prop="unit" label="单位" width="80" />
@@ -123,8 +124,12 @@ const total = ref(0)
 const dialogVisible = ref(false)
 const submitting = ref(false)
 const form = ref({ id: null, code: '', name: '', spec: '', unit: '', barcode: '', remark: '' })
+const formRef = ref(null)
 const mainImageFileList = ref([])
-const rules = { name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }] }
+const rules = {
+  name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
+  barcode: [{ required: true, message: '请输入条形码', trigger: 'blur' }]
+}
 
 const loadData = async () => {
   try {
@@ -181,6 +186,7 @@ const uploadMainImages = async (goodsId) => {
 }
 
 const handleSubmit = async () => {
+  try { await formRef.value.validate() } catch { return }
   submitting.value = true
   try {
     let id = form.value.id

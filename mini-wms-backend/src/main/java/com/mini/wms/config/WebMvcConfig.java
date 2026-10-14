@@ -31,11 +31,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 映射静态资源（前端打包产物）
+        // 注意顺序：外部 public 目录（Docker 构建时注入的最新前端）优先于 jar 内置的 classpath:/static/，
+        // 否则随 jar 打包的旧前端会屏蔽外部新产物，导致前端改动部署后不生效。
         registry.addResourceHandler("/**")
                 .addResourceLocations(
-                        "classpath:/static/",
                         "file:/app/public/",
-                        "file:./public/"
+                        "file:./public/",
+                        "classpath:/static/"
                 )
                 .resourceChain(true)
                 .addResolver(new PathResourceResolver() {

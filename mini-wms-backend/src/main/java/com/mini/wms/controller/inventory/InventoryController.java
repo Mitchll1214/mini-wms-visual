@@ -65,8 +65,9 @@ public class InventoryController {
     @GetMapping("/logs")
     public Result<?> logs(@RequestParam(defaultValue = "1") int page,
                           @RequestParam(defaultValue = "20") int size,
-                          @RequestParam(required = false) Integer goodsId) {
-        return stockLogService.page(page, size, goodsId);
+                          @RequestParam(required = false) Integer goodsId,
+                          @RequestParam(required = false) String changeType) {
+        return stockLogService.page(page, size, goodsId, changeType);
     }
 
     /**

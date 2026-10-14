@@ -158,7 +158,7 @@ const loadOptions = async () => {
   try {
     const g = await request.get('/api/goods/page', { params: { page: 1, size: 999 } })
     goodsList.value = g?.records || g?.rows || []
-    goodsMap.value = Object.fromEntries(goodsList.value.map(x => [x.id, `${x.name || ''}${x.barcode ? '（' + x.barcode + '）' : ''}`]))
+    goodsMap.value = Object.fromEntries(goodsList.value.map(x => [x.id, [x.barcode, x.name, x.code].filter(Boolean).join(' · ')]))
   } catch (err) { console.error('加载商品选项失败', err) }
   try {
     const b = await request.get('/api/bin/tree')
@@ -167,7 +167,7 @@ const loadOptions = async () => {
   } catch (err) { console.error('加载储位选项失败', err) }
 }
 
-const goodsLabel = (g) => `${g.name || ''}${g.barcode ? '（' + g.barcode + '）' : ''}`
+const goodsLabel = (g) => [g.barcode, g.name, g.code].filter(Boolean).join(' · ')
 const binLabel = (b) => `${b.code || ''}${b.name ? ' · ' + b.name : ''}`
 const binLoc = (b) => [b.warehouseName, b.areaName, b.shelfName].filter(Boolean).join(' / ')
 
