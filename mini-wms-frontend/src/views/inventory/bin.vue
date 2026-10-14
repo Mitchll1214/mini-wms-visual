@@ -17,7 +17,7 @@
       </el-form>
 
       <el-table :data="tableData" border style="width: 100%" empty-text="当前储位暂无商品库存">
-        <el-table-column prop="goodsCode" label="商品编码" width="160" />
+        <el-table-column prop="goodsBarcode" label="条码" width="160" />
         <el-table-column prop="goodsName" label="商品名称" min-width="180" />
         <el-table-column prop="spec" label="规格" width="130" />
         <el-table-column prop="qty" label="在库数量" width="120">

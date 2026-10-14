@@ -6,7 +6,6 @@
       <el-col :span="12">
         <el-card header="商品基本信息">
           <el-descriptions :column="1" border>
-            <el-descriptions-item label="商品编码">{{ goods.code }}</el-descriptions-item>
             <el-descriptions-item label="商品名称">{{ goods.name }}</el-descriptions-item>
             <el-descriptions-item label="规格型号">{{ goods.spec || '-' }}</el-descriptions-item>
             <el-descriptions-item label="计量单位">{{ goods.unit || '-' }}</el-descriptions-item>

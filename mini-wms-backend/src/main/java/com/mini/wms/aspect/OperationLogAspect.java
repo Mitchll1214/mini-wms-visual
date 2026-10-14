@@ -1,6 +1,5 @@
 package com.mini.wms.aspect;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mini.wms.dto.Result;
 import com.mini.wms.entity.SysSession;
 import com.mini.wms.entity.SysUser;
@@ -28,14 +27,12 @@ import java.util.Map;
  * 操作日志切面
  *
  * 统一拦截 controller 层所有「写操作」（POST / PUT / DELETE）并在成功返回后写入操作日志，
- * 避免在每个业务方法里手工调用 {@link OperationLogService#record}，做到操作无遗漏。
- *
- * 日志字段：
- *   module   —— 由请求路径前缀映射（如 商品管理 / 入库管理）
- *   action   —— 由 HTTP 方法与路径末段推断（如 新增 / 修改 / 审核 / 撤销）
- *   detail   —— 请求路径 + 查询串 + 请求参数（自动脱敏密码 / 会话串）
- *   operator —— 当前会话用户（登录等无会话接口回落到参数里的 username）
- *   deviceInfo —— 会话客户端类型（PC / MOBILE）
+ * 做到操作无遗漏。日志只记录业务要点，<b>不记录接口路径与请求参数</b>：
+ *   module   —— 业务模块（如 商品管理 / 入库管理），由请求路径前缀映射，不暴露路径原文；
+ *   action   —— 业务动作（如 新增 / 审核 / 撤销 / 登录）；
+ *   detail   —— 关键信息（登录记录来源 IP；单据记录单号；其余记录对象名称或 ID）；
+ *   operator —— 操作人账号（登录等无会话接口回落到参数 username）；
+ *   deviceInfo —— 客户端类型（PC / MOBILE）。
  */
 @Slf4j
 @Aspect
@@ -46,31 +43,22 @@ public class OperationLogAspect {
     private final OperationLogService operationLogService;
     private final AuthService authService;
     private final SysUserMapper sysUserMapper;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /** 命中「写操作」后记录日志 */
     @AfterReturning(pointcut = "execution(* com.mini.wms.controller..*.*(..))", returning = "result")
     public void recordOperation(JoinPoint joinPoint, Object result) {
         try {
             HttpServletRequest request = currentRequest();
-            if (request == null) {
+            if (request == null || !isWriteMethod(request.getMethod()) || !isSuccess(result)) {
                 return;
             }
-            String method = request.getMethod();
-            if (!isWriteMethod(method)) {
-                return;
-            }
-            // 仅当业务成功（Result.code == 0）时记录，失败操作由前端提示即可
-            if (!isSuccess(result)) {
-                return;
-            }
-
             String uri = request.getRequestURI();
-            String operator = resolveOperator(request, joinPoint);
-            String device = resolveDevice(request, joinPoint);
-            String detail = resolveDetail(request, joinPoint);
-
-            operationLogService.record(resolveModule(uri), resolveAction(uri, method), detail, operator, device);
+            operationLogService.record(
+                    resolveModule(uri),
+                    resolveAction(uri, request.getMethod()),
+                    resolveDetail(request, uri, joinPoint),
+                    resolveOperator(request, joinPoint),
+                    resolveDevice(request, joinPoint));
         } catch (Exception e) {
             // 记录日志失败绝不能影响主业务
             log.warn("记录操作日志失败: {}", e.getMessage());
@@ -87,7 +75,6 @@ public class OperationLogAspect {
         if (result instanceof Result<?> r) {
             return r.getCode() == 0;
         }
-        // 非统一返回体（如 ResponseEntity）默认视为成功
         return true;
     }
 
@@ -98,7 +85,7 @@ public class OperationLogAspect {
         return null;
     }
 
-    /** 路径前缀 → 模块名（长前缀优先，避免 /api/inventory/adjust 被 /api/inventory 抢占） */
+    /** 路径前缀 → 业务模块名（长前缀优先，避免 /api/inventory/adjust 被 /api/inventory 抢占） */
     private String resolveModule(String uri) {
         if (uri.startsWith("/api/inventory/adjust")) return "库存调整";
         if (uri.startsWith("/api/auth/users")) return "用户管理";
@@ -120,9 +107,8 @@ public class OperationLogAspect {
         return "其他";
     }
 
-    /** HTTP 方法 + 路径末段 → 动作 */
+    /** HTTP 方法 + 路径末段 → 业务动作（只输出动作名，不暴露路径） */
     private String resolveAction(String uri, String method) {
-        // 特殊动作（按路径末段）
         if (uri.endsWith("/login")) return "登录";
         if (uri.endsWith("/logout")) return "退出登录";
         if (uri.endsWith("/change-password")) return "修改密码";
@@ -138,14 +124,80 @@ public class OperationLogAspect {
         if (uri.endsWith("/markers")) return "图片标记";
         if ("POST".equalsIgnoreCase(method) && uri.endsWith("/images")) return "上传图片";
         if (uri.endsWith("/suggest")) return "获取拆分方案";
-        // 常规动作（按 HTTP 方法）
         if ("POST".equalsIgnoreCase(method)) return "新增";
         if ("PUT".equalsIgnoreCase(method)) return "修改";
         if ("DELETE".equalsIgnoreCase(method)) return "删除";
         return method;
     }
 
-    /** 当前操作用户：优先会话，其次请求参数里的 username（如登录接口） */
+    /**
+     * 关键信息（不含接口路径与请求参数明细）：
+     *   登录 —— 记录来源 IP；
+     *   单据操作 —— 记录单号；
+     *   其余 —— 记录对象名称，缺失时回落为记录 ID。
+     */
+    private String resolveDetail(HttpServletRequest request, String uri, JoinPoint joinPoint) {
+        if (uri.endsWith("/login")) {
+            return "登录 IP " + clientIp(request);
+        }
+        String orderNo = firstGetterValue(joinPoint, "getOrderNo");
+        if (orderNo != null) {
+            return "单号 " + orderNo;
+        }
+        String name = firstGetterValue(joinPoint, "getName");
+        if (name != null) {
+            return "对象 " + name;
+        }
+        String id = lastPathNumber(uri);
+        return id == null ? null : "记录 ID " + id;
+    }
+
+    private String clientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            int comma = forwarded.indexOf(',');
+            return (comma > 0 ? forwarded.substring(0, comma) : forwarded).trim();
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (realIp != null && !realIp.isBlank()) {
+            return realIp.trim();
+        }
+        return request.getRemoteAddr();
+    }
+
+    /** 取请求参数对象中某个 getter 的字符串值（如 getOrderNo / getName），无则 null */
+    private String firstGetterValue(JoinPoint joinPoint, String getter) {
+        for (Object arg : joinPoint.getArgs()) {
+            if (!isBusinessArg(arg)) {
+                continue;
+            }
+            if (arg instanceof Map<?, ?> map) {
+                Object v = map.get(getter.substring(3, 4).toLowerCase() + getter.substring(4));
+                if (v != null && !v.toString().isBlank()) {
+                    return v.toString();
+                }
+                continue;
+            }
+            String value = invokeStringGetter(arg, getter);
+            if (value != null) {
+                return value;
+            }
+        }
+        return null;
+    }
+
+    /** 取请求路径中最后一段的数字（如 /api/stock-in/12/audit → 12） */
+    private String lastPathNumber(String uri) {
+        String[] parts = uri.split("/");
+        for (int i = parts.length - 1; i >= 0; i--) {
+            if (parts[i].matches("\\d+")) {
+                return parts[i];
+            }
+        }
+        return null;
+    }
+
+    /** 当前操作人：优先会话，其次请求参数里的 username（如登录接口） */
     private String resolveOperator(HttpServletRequest request, JoinPoint joinPoint) {
         String sessionId = resolveSessionId(request);
         if (sessionId != null) {
@@ -157,9 +209,14 @@ public class OperationLogAspect {
                 }
             }
         }
-        // 回落：从参数对象里取 username
         for (Object arg : joinPoint.getArgs()) {
-            String name = extractUsername(arg);
+            if (arg instanceof Map<?, ?> map) {
+                Object u = map.get("username");
+                if (u != null && !u.toString().isBlank()) {
+                    return u.toString();
+                }
+            }
+            String name = invokeStringGetter(arg, "getUsername");
             if (name != null) {
                 return name;
             }
@@ -167,7 +224,7 @@ public class OperationLogAspect {
         return "匿名";
     }
 
-    /** 设备类型：优先会话客户端类型，其次登录参数 clientType，默认 PC */
+    /** 客户端类型：优先会话，其次登录参数 clientType，默认 PC */
     private String resolveDevice(HttpServletRequest request, JoinPoint joinPoint) {
         String sessionId = resolveSessionId(request);
         if (sessionId != null) {
@@ -185,46 +242,14 @@ public class OperationLogAspect {
         return "PC";
     }
 
-    /** 详细说明：路径 + 查询串 + 可序列化参数（脱敏后截断） */
-    private String resolveDetail(HttpServletRequest request, JoinPoint joinPoint) {
-        StringBuilder sb = new StringBuilder(request.getRequestURI());
-        String query = request.getQueryString();
-        if (query != null && !query.isEmpty()) {
-            sb.append('?').append(query);
-        }
-        for (Object arg : joinPoint.getArgs()) {
-            if (!isSerializableArg(arg)) {
-                continue;
-            }
-            try {
-                String json = objectMapper.writeValueAsString(arg);
-                if (json != null && json.length() > 2 && !"{}".equals(json) && !"[]".equals(json)) {
-                    sb.append(" | ").append(json);
-                }
-            } catch (Exception ignore) {
-                // 参数无法序列化则跳过
-            }
-        }
-        String detail = desensitize(sb.toString());
-        return detail.length() > 1000 ? detail.substring(0, 1000) + "…" : detail;
-    }
-
-    private boolean isSerializableArg(Object arg) {
+    private boolean isBusinessArg(Object arg) {
         if (arg == null) return false;
+        if (arg instanceof String) return false;
+        if (arg instanceof Number || arg instanceof Boolean) return false;
         if (arg instanceof HttpServletRequest || arg instanceof HttpServletResponse) return false;
         if (arg instanceof MultipartFile || arg instanceof MultipartFile[]) return false;
         if (arg instanceof InputStream || arg instanceof OutputStream) return false;
         return true;
-    }
-
-    /** 对密码 / 会话串等敏感字段脱敏 */
-    private String desensitize(String text) {
-        if (text == null) return null;
-        String result = text.replaceAll(
-                "(?i)\"([a-z]*password[a-z]*|oldPassword|newPassword)\"\\s*:\\s*\"[^\"]*\"", "\"$1\":\"***\"");
-        result = result.replaceAll("(?i)(sessionId=)[^&\\s\"]*", "$1***");
-        result = result.replaceAll("(?i)\"(sessionId)\"\\s*:\\s*\"[^\"]*\"", "\"$1\":\"***\"");
-        return result;
     }
 
     private String resolveSessionId(HttpServletRequest request) {
@@ -233,18 +258,6 @@ public class OperationLogAspect {
             sessionId = request.getParameter("sessionId");
         }
         return (sessionId == null || sessionId.isEmpty()) ? null : sessionId;
-    }
-
-    private String extractUsername(Object arg) {
-        if (arg == null) return null;
-        if (arg instanceof String) {
-            return null;
-        }
-        if (arg instanceof Map<?, ?> map) {
-            Object u = map.get("username");
-            return u == null ? null : u.toString();
-        }
-        return invokeStringGetter(arg, "getUsername");
     }
 
     private String invokeStringGetter(Object arg, String getter) {

@@ -33,13 +33,13 @@ public class InventoryService {
 
     /**
      * 商品库存分页（商品合并视图）
-     * 每个商品一行：goodsCode/goodsName/categoryName/totalQty/binSummary/binList
+     * 每个商品一行：goodsBarcode/goodsName/categoryName/totalQty/binSummary/binList
      */
     public Result<?> page(int page, int size, String keyword, Integer goodsId, String status) {
         StringBuilder where = new StringBuilder(" WHERE i.deleted_at IS NULL ");
         List<Object> args = new ArrayList<>();
         if (keyword != null && !keyword.isBlank()) {
-            where.append(" AND (g.name LIKE ? OR g.code LIKE ?) ");
+            where.append(" AND (g.name LIKE ? OR g.barcode LIKE ?) ");
             args.add("%" + keyword + "%");
             args.add("%" + keyword + "%");
         }
@@ -59,7 +59,7 @@ public class InventoryService {
         pageArgs.add(size);
         pageArgs.add(offset);
         List<Map<String, Object>> records = jdbcTemplate.queryForList(
-                "SELECT i.goods_id AS goodsId, g.code AS goodsCode, g.name AS goodsName, "
+                "SELECT i.goods_id AS goodsId, g.barcode AS goodsBarcode, g.name AS goodsName, "
                         + "c.name AS categoryName, COALESCE(SUM(i.qty), 0) AS totalQty "
                         + "FROM inventory i "
                         + "LEFT JOIN goods g ON g.id = i.goods_id "
@@ -103,7 +103,13 @@ public class InventoryService {
      * 储位视图
      */
     public Result<?> binInventory(Integer binId) {
-        return Result.success(inventoryMapper.selectByBinId(binId));
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                "SELECT i.id AS id, i.bin_id AS binId, i.qty AS qty, i.updated_at AS updatedAt, "
+                        + "g.name AS goodsName, g.spec AS spec, g.barcode AS goodsBarcode "
+                        + "FROM inventory i LEFT JOIN goods g ON g.id = i.goods_id "
+                        + "WHERE i.bin_id = ? AND i.deleted_at IS NULL ORDER BY g.name",
+                binId);
+        return Result.success(rows);
     }
 
     /**

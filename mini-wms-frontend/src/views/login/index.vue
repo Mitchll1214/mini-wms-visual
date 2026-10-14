@@ -1,43 +1,34 @@
 <template>
   <div class="login-shell">
     <!-- 左：功能介绍 -->
-    <section class="login-intro">
-      <div class="brand rise">
-        <span class="mark">W</span>
-        <div class="brand-text">
-          <strong>小仓图管</strong>
-          <span>MiniWMS Visual</span>
+    <section class="intro">
+      <div class="intro-head">
+        <div class="brand">
+          <span class="mark" aria-hidden="true">W</span>
+          <span class="brand-name">小仓图管</span>
         </div>
+        <h1 class="headline">把仓库的每一个货位，<br />搬到屏幕上</h1>
+        <p class="lede">面向小仓库的货位可视化、库存与流水管理，扫码即用，按角色分配权限。</p>
       </div>
 
-      <h1 class="headline rise">货位可视化，<br />库存一眼看清</h1>
-      <p class="lede rise">面向小仓库的货位可视化、库存展示与拍照标记管理系统。</p>
-
-      <ul class="feature-list rise">
-        <li v-for="f in features" :key="f.title" class="feat">
-          <span class="feat-icon"><el-icon :size="20"><component :is="f.icon" /></el-icon></span>
-          <div class="feat-body">
-            <strong>{{ f.title }}</strong>
-            <p>{{ f.desc }}</p>
-          </div>
+      <ul class="features">
+        <li v-for="f in features" :key="f.title" class="feature">
+          <span class="dot" aria-hidden="true"></span>
+          <span class="feature-text">
+            <strong class="feature-title">{{ f.title }}</strong>
+            <span class="feature-desc">{{ f.desc }}</span>
+          </span>
         </li>
       </ul>
 
-      <p class="foot rise">Spring Boot 3 · Vue 3 · SQLite · 单机 Docker 部署</p>
+      <p class="intro-foot">Spring Boot 3 · Vue 3 · SQLite · Docker Compose</p>
     </section>
 
     <!-- 右：登录 -->
-    <section class="login-panel">
-      <div class="login-box">
-        <div class="mobile-brand">
-          <span class="mark">W</span>
-          <strong>小仓图管</strong>
-        </div>
-
-        <header class="panel-head">
-          <h2>欢迎回来</h2>
-          <p>请使用管理员分配的账号登录</p>
-        </header>
+    <section class="panel">
+      <div class="login-card">
+        <h2 class="card-title">登录</h2>
+        <p class="card-sub">请使用管理员分配的账号</p>
 
         <form class="login-form" @submit.prevent="login">
           <label class="field">
@@ -53,16 +44,15 @@
           </el-button>
         </form>
 
-        <p class="hint">账密由管理员分配 · 登录后按角色显示权限</p>
+        <p class="hint">登录后按角色显示权限</p>
       </div>
     </section>
   </div>
 </template>
 
 <script setup>
-import { ref, markRaw } from 'vue'
+import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Grid, DataBoard, Box, Iphone } from '@element-plus/icons-vue'
 import request from '@/utils/request'
 import { useUserStore } from '@/store/user'
 
@@ -71,10 +61,10 @@ const loading = ref(false)
 const userStore = useUserStore()
 
 const features = [
-  { icon: markRaw(Grid), title: '货位可视化', desc: '仓库 / 库区 / 货架 / 储位逐级维护，货位状态一目了然' },
-  { icon: markRaw(DataBoard), title: '库存多视图', desc: '商品视图 / 储位视图 / 库存流水，进出有据可查' },
-  { icon: markRaw(Box), title: '出入库与拆分', desc: '入库出库单据流转，出库自动推荐拆分储位' },
-  { icon: markRaw(Iphone), title: '手机扫码授权', desc: '扫码免密进入，只读 / 操作双模式按需授权' }
+  { title: '货位可视化', desc: '仓库 / 库区 / 货架 / 储位逐级维护，状态一目了然' },
+  { title: '库存多视图', desc: '商品 / 储位 / 流水，进出有据可查' },
+  { title: '出入库与拆分', desc: '单据流转，出库自动推荐拆分储位' },
+  { title: '手机扫码授权', desc: '扫码免密进入，只读 / 操作双模式' }
 ]
 
 const login = async () => {
@@ -100,101 +90,88 @@ const login = async () => {
 </script>
 
 <style scoped>
+/* Hallmark · macrostructure: Split Intro · tone: technical · anchor hue: 255 (cobalt) · theme: Cobalt
+ * pre-emit critique: P4 H4 E4 S4 R5 V4
+ * genre: modern-minimal · paper: light · display: system grotesk · accent: cool-blue
+ */
 .login-shell {
   min-height: 100svh;
   display: grid;
-  grid-template-columns: minmax(0, 47%) minmax(0, 53%);
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, 0.94fr);
   background: var(--color-paper);
 }
 
 /* ---------- 左：功能介绍 ---------- */
-.login-intro {
-  position: relative;
+.intro {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: var(--space-6);
-  padding: clamp(32px, 5vw, 72px);
-  color: oklch(96% 0.006 250);
-  background-color: oklch(26% 0.025 262);
-  background-image:
-    repeating-linear-gradient(0deg, transparent 0 27px, oklch(100% 0 0 / 0.035) 27px 28px),
-    repeating-linear-gradient(90deg, transparent 0 27px, oklch(100% 0 0 / 0.035) 27px 28px),
-    radial-gradient(120% 80% at 15% 0%, oklch(40% 0.09 258) 0%, oklch(26% 0.025 262) 55%);
-  overflow: hidden;
+  gap: var(--space-10);
+  padding: clamp(32px, 4.5vw, 80px) clamp(28px, 4.5vw, 72px);
 }
+.intro-head { display: flex; flex-direction: column; gap: var(--space-5); }
 
 .brand { display: flex; align-items: center; gap: var(--space-3); }
 .mark {
   display: inline-grid; place-items: center;
-  width: 40px; height: 40px; border-radius: var(--radius-md);
+  width: 38px; height: 38px; border-radius: var(--radius-md);
   background: var(--color-accent); color: #fff;
-  font-weight: 700; font-size: var(--text-xl);
+  font-weight: 700; font-size: var(--text-lg);
 }
-.brand-text { display: flex; flex-direction: column; line-height: 1.25; }
-.brand-text strong { font-size: var(--text-lg); color: oklch(98% 0.004 250); }
-.brand-text span { font-size: var(--text-xs); letter-spacing: 0.06em; color: oklch(78% 0.02 250); }
+.brand-name { font-weight: 600; letter-spacing: 0.02em; }
 
 .headline {
   margin: 0;
-  font-size: clamp(30px, 3.4vw, 44px);
+  font-size: clamp(28px, 3vw, 42px);
   line-height: 1.14;
   letter-spacing: -0.02em;
-  color: oklch(99% 0.003 250);
+  color: var(--color-ink);
 }
 .lede {
-  margin: 0;
-  max-width: 34ch;
-  font-size: var(--text-md);
-  color: oklch(82% 0.012 250);
+  margin: 0; max-width: 42ch;
+  font-size: var(--text-md); color: var(--color-ink-soft);
 }
 
-.feature-list {
-  list-style: none;
-  margin: var(--space-2) 0 0;
-  padding: 0;
+.features { list-style: none; margin: 0; padding: 0; max-width: 46ch; }
+.feature {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: var(--space-4);
-  max-width: 42ch;
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--color-border);
 }
-.feat { display: flex; gap: var(--space-4); align-items: flex-start; }
-.feat-icon {
-  flex: 0 0 auto;
-  display: grid; place-items: center;
-  width: 38px; height: 38px;
-  border-radius: var(--radius-md);
-  background: oklch(100% 0 0 / 0.09);
-  border: 1px solid oklch(100% 0 0 / 0.12);
-  color: oklch(80% 0.09 255);
+.feature:last-child { border-bottom: 1px solid var(--color-border); }
+.dot {
+  width: 7px; height: 7px; margin-top: 7px;
+  border-radius: 50%; background: var(--color-accent);
 }
-.feat-body strong { display: block; font-size: var(--text-md); font-weight: 600; color: oklch(98% 0.004 250); }
-.feat-body p { margin: 2px 0 0; font-size: var(--text-sm); line-height: 1.5; color: oklch(80% 0.012 250); }
+.feature-text { display: flex; flex-direction: column; gap: 3px; }
+.feature-title { font-size: var(--text-md); font-weight: 600; color: var(--color-ink); }
+.feature-desc { font-size: var(--text-sm); color: var(--color-ink-soft); }
 
-.foot {
-  margin: var(--space-4) 0 0;
+.intro-foot {
   font-size: var(--text-xs);
   letter-spacing: 0.04em;
-  color: oklch(70% 0.015 250);
+  color: var(--color-ink-faint);
 }
 
 /* ---------- 右：登录 ---------- */
-.login-panel {
+.panel {
   display: grid; place-items: center;
-  padding: clamp(24px, 6vw, 72px);
+  padding: clamp(24px, 4vw, 64px);
+  background: var(--color-paper-2);
+  border-left: 1px solid var(--color-border);
 }
-.login-box { width: 100%; max-width: 380px; }
-
-.mobile-brand {
-  display: none;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-8);
+.login-card {
+  width: 100%; max-width: 380px;
+  padding: clamp(24px, 3vw, 36px);
+  background: var(--color-paper);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
 }
-.mobile-brand strong { font-size: var(--text-lg); color: var(--color-ink); }
-
-.panel-head { margin-bottom: var(--space-8); }
-.panel-head h2 { margin: 0 0 var(--space-2); }
-.panel-head p { margin: 0; font-size: var(--text-sm); color: var(--color-ink-faint); }
+.card-title { margin: 0 0 var(--space-2); font-size: var(--text-xl); }
+.card-sub { margin: 0 0 var(--space-8); font-size: var(--text-sm); color: var(--color-ink-faint); }
 
 .login-form { display: flex; flex-direction: column; gap: var(--space-4); }
 .field span {
@@ -203,17 +180,17 @@ const login = async () => {
 }
 .submit { width: 100%; margin-top: var(--space-2); }
 .hint {
-  margin-top: var(--space-8); font-size: var(--text-xs);
+  margin: var(--space-8) 0 0; font-size: var(--text-xs);
   color: var(--color-ink-faint); text-align: center;
 }
 
 /* ---------- 入场动效（首次加载，尊重减弱动效偏好） ---------- */
 @media (prefers-reduced-motion: no-preference) {
-  .rise { animation: rise var(--dur-slow) var(--ease-out) both; }
-  .headline { animation-delay: 70ms; }
-  .lede { animation-delay: 140ms; }
-  .feature-list { animation-delay: 210ms; }
-  .foot { animation-delay: 280ms; }
+  .intro-head, .features, .intro-foot, .login-card {
+    animation: rise var(--dur-slow) var(--ease-out) both;
+  }
+  .features { animation-delay: 80ms; }
+  .login-card { animation-delay: 120ms; }
 }
 @keyframes rise {
   from { opacity: 0; transform: translateY(12px); filter: blur(4px); }
@@ -222,8 +199,15 @@ const login = async () => {
 
 @media (max-width: 900px) {
   .login-shell { grid-template-columns: 1fr; }
-  .login-intro { display: none; }
-  .mobile-brand { display: flex; }
-  .login-panel { min-height: 100svh; }
+  .intro { gap: var(--space-6); padding: clamp(28px, 7vw, 44px) clamp(20px, 6vw, 40px); }
+  .features, .intro-foot { display: none; }
+  .panel {
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-paper);
+    padding: 0 clamp(20px, 6vw, 40px) clamp(40px, 8vw, 64px);
+    place-items: start center;
+  }
+  .login-card { max-width: 420px; box-shadow: none; border: none; padding: 0; }
 }
 </style>

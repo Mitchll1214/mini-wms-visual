@@ -36,7 +36,7 @@ public class GoodsService {
                 .and(keyword != null && !keyword.isEmpty(), w -> w
                         .like(Goods::getName, keyword)
                         .or()
-                        .like(Goods::getCode, keyword))
+                        .like(Goods::getBarcode, keyword))
                 .eq(categoryId != null && !categoryId.isEmpty(), Goods::getCategoryId, categoryId)
                 .eq(status != null && !status.isEmpty(), Goods::getStatus, status)
                 .orderByDesc(Goods::getCreatedAt);

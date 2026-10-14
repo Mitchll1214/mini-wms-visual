@@ -10,7 +10,7 @@
 
       <el-form :inline="true" :model="query" class="search-form">
         <el-form-item label="关键字">
-          <el-input v-model="query.keyword" placeholder="商品名称/编码/条码" clearable />
+          <el-input v-model="query.keyword" placeholder="商品名称/条码" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="loadData">查询</el-button>
@@ -31,7 +31,6 @@
             <el-icon v-else color="#c0c4cc" style="font-size: 28px"><Picture /></el-icon>
           </template>
         </el-table-column>
-        <el-table-column prop="code" label="商品编码" width="140" />
         <el-table-column prop="name" label="商品名称" min-width="160" />
         <el-table-column prop="spec" label="规格型号" width="130" />
         <el-table-column prop="unit" label="单位" width="80" />
@@ -73,15 +72,6 @@
 
     <el-dialog v-model="dialogVisible" :title="form.id ? '编辑商品' : '新建商品'" width="580px">
       <el-form :model="form" :rules="rules" ref="formRef" label-width="100px">
-        <el-form-item label="商品编码" prop="code">
-          <template v-if="form.id">
-            <el-input v-model="form.code" disabled />
-          </template>
-          <template v-else>
-            <el-input v-model="form.code" placeholder="留空自动生成" clearable />
-          </template>
-          <div class="form-tip">不填写时由系统自动生成</div>
-        </el-form-item>
         <el-form-item label="商品名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入商品名称" />
         </el-form-item>

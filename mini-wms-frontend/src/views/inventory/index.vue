@@ -12,7 +12,7 @@
 
       <el-form :inline="true" :model="query" class="search-form">
         <el-form-item label="关键字">
-          <el-input v-model="query.keyword" placeholder="商品名称/编码" clearable />
+          <el-input v-model="query.keyword" placeholder="商品名称/条码" clearable />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="loadData">查询</el-button>
@@ -52,7 +52,7 @@
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="goodsCode" label="商品编码" width="140" />
+        <el-table-column prop="goodsBarcode" label="条码" width="140" />
         <el-table-column prop="goodsName" label="商品名称" min-width="160" />
         <el-table-column prop="categoryName" label="类别" width="120" />
         <el-table-column prop="totalQty" label="总库存" width="120">
